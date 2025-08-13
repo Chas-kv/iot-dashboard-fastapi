@@ -66,7 +66,7 @@ IoT_env\Scripts\activate     # Windows
 pip install -r requirements.txt
 
 ## Configurar variables de entorno
-Crear un archivo .env en laraiz  del proyecto con contenido similar:
+Crear un archivo .env en la raiz  del proyecto con contenido similar:
 SESSION_SECRET=clave_sesion_segura
 JWT_SECRET=clave_jwt_segura
 MQTT_BROKER=localhost
