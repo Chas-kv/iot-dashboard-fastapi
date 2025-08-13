@@ -19,26 +19,33 @@ Este proyecto implementa un sistema IoT que conecta un **ESP8266** con sensores 
 
 ---
 
-## 📂 Estructura del proyecto
 
+
+## 📂 Estructura del Proyecto
+
+```plaintext
 PROYECTO-IoT-API-RESTFUL/
 │
-├── app/ # Código fuente principal
-│ ├── main.py # Servidor FastAPI + rutas
-│ ├── mqtt_handler.py # Cliente MQTT
-│ ├── models.py # Modelos Pydantic
-│ └── ...
+├── app/                     # Código fuente principal de la API
+│   ├── main.py              # Servidor FastAPI + rutas y lógica principal
+│   ├── mqtt_handler.py      # Cliente MQTT y gestión de mensajes
+│   ├── models.py            # Modelos Pydantic para validación de datos
+│   └── ...                  # Otros módulos de soporte
 │
-├── static/ # Archivos CSS
-├── templates/ # HTML del dashboard
-├── scripts/ # Scripts para iniciar/ detener el proyecto y broker
-├── datos.json # Datos actuales (generado en runtime)
-├── historial.json # Historial de eventos (generado en runtime)
-├── requirements.txt # Dependencias Python
-├── Dockerfile # Configuración para Docker
-├── docker-compose.*.yml # Configuración de Docker Compose
-├── README.md # Este archivo
-└── .gitignore # Archivos y carpetas ignoradas por git
+├── static/                  # Archivos CSS y recursos estáticos
+├── templates/               # Plantillas HTML (Dashboard)
+├── scripts/                 # Scripts para iniciar/detener el proyecto y broker
+│
+├── datos.json               # Datos actuales (generado en tiempo de ejecución)
+├── historial.json           # Historial de eventos (generado en tiempo de ejecución)
+│
+├── requirements.txt         # Dependencias de Python
+├── Dockerfile               # Configuración para construcción en Docker
+├── docker-compose.*.yml     # Configuración para orquestación con Docker Compose
+│
+├── README.md                # Documentación principal del proyecto
+└── .gitignore               # Archivos y carpetas ignorados por Git
+
 
 
 ---
