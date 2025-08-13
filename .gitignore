@@ -1,0 +1,42 @@
+# Archivos y carpetas de entorno
+.env
+.env.*
+!*.example
+
+# Archivos de configuración local
+config.py
+
+# Archivos de datos generados en runtime
+datos.json
+historial.json
+
+# Carpeta de entorno virtual
+IoT_env/
+venv/
+.venv/
+
+# Archivos compilados de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de build y distribución
+build/
+dist/
+*.spec
+
+# Archivos temporales de Docker
+docker-compose.override.yml
+
+# Configuración del editor / IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Logs
+*.log
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
