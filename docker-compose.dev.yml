@@ -1,0 +1,11 @@
+services:
+  fastapi_app:
+    build: .
+    container_name: fastapi-iot-dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    restart: unless-stopped

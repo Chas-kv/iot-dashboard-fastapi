@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel IoT - Compuerta</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <h1>Estado de la Compuerta</h1>
+  <div class="container fade-in">
+
+    <h2>Control</h2>
+    <p>
+      <strong>Modo:</strong>
+      <span id="modo" class="modo-auto">Automático</span>
+    </p>
+    <button id="toggleModo">Cambiar Modo</button>
+
+    <div id="manual-control" style="display: none; margin-top: 20px;">
+      <label for="servoSlider">Ángulo del Servo (Manual):</label>
+      <input type="range" id="servoSlider" min="0" max="180" value="90">
+      <span id="sliderValue">90°</span>
+    </div>
+
+    <h2>Estado Actual</h2>
+    <p><strong>Estado:</strong> <span id="estado" class="estado-cerrada">Cerrada</span></p>
+    <p><strong>Ángulo:</strong> <span id="servo">--</span>°</p>
+
+    <h2>Datos de Sensores</h2>
+    <p><strong>LDR (Luz):</strong> <span id="lumen">--</span></p>
+    <p><strong>Humedad:</strong> <span id="hum">--</span>%</p>
+    <p><strong>Temperatura:</strong> <span id="temp">--</span>°C</p>
+
+    <div id="logs"></div>
+  </div>
+
+  <h2>Historial de eventos recientes</h2>
+  <div class="historial-container">
+    <table class="historial-table" id="tabla-historial">
+      <thead>
+        <tr>
+          <th>Fecha y Hora</th>
+          <th>Tipo de Dato</th>
+          <th>Valor</th>
+        </tr>
+      </thead>
+      <tbody id="cuerpo-historial">
+        <!-- Se insertarán filas automáticamente -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const logsContainer = document.getElementById('logs');
+    const logBuffer = [];
+
+    function agregarLog(mensaje) {
+      const timestamp = new Date().toLocaleString();
+      const logEntry = `[${timestamp}] ${mensaje}`;
+
+      logBuffer.push(logEntry);
+      if (logBuffer.length > 30) logBuffer.shift();
+
+      logsContainer.innerHTML = logBuffer.map(log => `<div>${log}</div>`).join('');
+      logsContainer.scrollTop = logsContainer.scrollHeight;
+    }
+
+    // Cambiar modo
+    document.getElementById('toggleModo').addEventListener('click', async () => {
+      const modoElem = document.getElementById('modo');
+      const modoActualTexto = modoElem.textContent.trim();
+      const modoActual = modoActualTexto === "Automático" ? 1 : 0;
+      const nuevoModo = modoActual === 1 ? 0 : 1;
+
+      try {
+        const res = await fetch('/modo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-API-Key': 'Key_de_Seguridad_IoTproyect12345'
+          },
+          body: 'modo=' + nuevoModo
+        });
+
+        if (res.ok) {
+          modoElem.textContent = nuevoModo === 1 ? "Automático" : "Manual";
+          modoElem.className = nuevoModo === 1 ? "modo-auto" : "modo-manual";
+          document.getElementById('manual-control').style.display = (nuevoModo === 0) ? 'block' : 'none';
+          agregarLog(`🔁 Modo cambiado a: ${nuevoModo === 1 ? "Automático" : "Manual"}`);
+        } else {
+          agregarLog("❌ Error cambiando modo");
+        }
+      } catch (err) {
+        console.error("❌ Error al cambiar modo:", err);
+      }
+    });
+
+    // Enviar ángulo del slider (modo manual)
+    document.getElementById('servoSlider').addEventListener('input', async (e) => {
+      const angulo = e.target.value;
+      document.getElementById('sliderValue').textContent = angulo + '°';
+
+      await fetch('/servo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-API-Key': 'Key_de_Seguridad_IoTproyect12345'
+        },
+        body: 'angulo=' + angulo
+      });
+
+      agregarLog(`🔧 Ángulo cambiado a: ${angulo}°`);
+    });
+
+    async function obtenerDatos() {
+      try {
+        const res = await fetch("/status");
+        const data = await res.json();
+
+        document.getElementById('temp').textContent = data.temperature ?? '--';
+        document.getElementById('hum').textContent = data.humidity ?? '--';
+        document.getElementById('lumen').textContent = data.lumen ?? '--';
+        document.getElementById('servo').textContent = data.servo_value ?? '--';
+
+        const estadoElem = document.getElementById('estado');
+        estadoElem.textContent = data.door_state ? "Abierta" : "Cerrada";
+        estadoElem.className = data.door_state ? "estado-abierta" : "estado-cerrada";
+
+        const modoElem = document.getElementById('modo');
+        modoElem.textContent = data.mode === 1 ? "Automático" : "Manual";
+        modoElem.className = data.mode === 1 ? "modo-auto" : "modo-manual";
+
+        document.getElementById('manual-control').style.display = (data.mode === 0) ? 'block' : 'none';
+
+        agregarLog(`📡 Datos: Temp=${data.temperature ?? '--'}°C | Hum=${data.humidity ?? '--'}% | Luz=${data.lumen ?? '--'} | Servo=${data.servo_value ?? '--'}° | Estado=${data.door_state ? 'Abierta' : 'Cerrada'} | Modo=${data.mode === 1 ? 'Automático' : 'Manual'}`);
+      } catch (err) {
+        console.error("Error al obtener datos:", err);
+      }
+    }
+
+    async function cargarHistorial() {
+      try {
+        const res = await fetch("/historial");
+        const datos = await res.json();
+        const cuerpo = document.getElementById("cuerpo-historial");
+
+        cuerpo.innerHTML = "";
+
+        datos.slice().reverse().forEach(entry => {
+          const fila = document.createElement("tr");
+
+          const fecha = entry.timestamp
+            ? new Date(entry.timestamp).toLocaleString()
+            : "--";
+
+          const tipo = entry.key ?? "--";
+          const valor = entry.value ?? "--";
+
+          fila.innerHTML = `
+            <td>${fecha}</td>
+            <td>${tipo}</td>
+            <td>${valor}</td>
+          `;
+          cuerpo.appendChild(fila);
+        });
+
+        if (datos.length === 0) {
+          cuerpo.innerHTML = "<tr><td colspan='3'>No hay datos en el historial</td></tr>";
+        }
+
+        agregarLog("📜 Historial cargado");
+      } catch (err) {
+        console.error("❌ Error cargando historial:", err);
+      }
+    }
+
+    setInterval(obtenerDatos, 3000);
+    obtenerDatos();
+
+    setInterval(cargarHistorial, 5000);
+    cargarHistorial();
+  </script>
+</body>
+</html>
